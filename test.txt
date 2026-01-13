@@ -1,0 +1,26 @@
+flowchart TD
+    EB[EventBridge<br/>Weekly Schedule]
+    SF[Step Functions<br/>Orchestration]
+    L1[Lambda<br/>Fetch Failed Txns]
+    DDB[(DynamoDB)]
+    L2[Lambda<br/>Transform Data]
+    L3[Lambda<br/>Generate Excel]
+    S3[(S3<br/>Excel Reports)]
+    L4[Lambda<br/>Send Email]
+    SNS[SNS / SES]
+    DLQ[SQS DLQ]
+    CW[CloudWatch]
+
+    EB --> SF
+    SF --> L1
+    L1 --> DDB
+    L1 --> L2
+    L2 --> L3
+    L3 --> S3
+    S3 --> L4
+    L4 --> SNS
+
+    L1 -. error .-> DLQ
+    L2 -. error .-> DLQ
+    L3 -. error .-> DLQ
+    SF -. logs .-> CW
