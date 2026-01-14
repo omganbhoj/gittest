@@ -136,4 +136,20 @@ flowchart TD
     </mxGraphModel>
   </diagram>
 </mxfile>
+====================================================
+csv data
+=================================
+Id,Name,Type,Parent
+1,EventBridge Weekly Schedule,Process,
+2,Step Functions (Control Plane),Process,
+3,Fetch Failed Transactions Lambda,Process,2
+4,Transform Data Lambda,Process,2
+5,Generate Excel Report Lambda,Process,2
+6,Failure Handler Lambda,Process,2
+7,DynamoDB Transactions Table,Database,
+8,S3 Raw Data (JSON),Data,
+9,S3 Transformed Data,Data,
+10,S3 Final Excel Report,Data,
+11,SNS / SES Email Dev & BA,Process,
+12,SQS Dead Letter Queue,Queue,
 
