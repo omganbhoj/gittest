@@ -1,49 +1,45 @@
 flowchart LR
-    %% Triggers
-    EB[Amazon EventBridge<br/>Weekly Schedule]
-    SF[AWS Step Functions<br/>Orchestrator]
+    EB[Amazon EventBridge - Weekly Trigger]
+    SF[AWS Step Functions Orchestrator]
 
-    %% Source
-    DDB[Amazon DynamoDB<br/>Transactions Table]
+    DDB[Amazon DynamoDB Transactions Table]
 
-    %% Data Lake
-    S3Raw[Amazon S3<br/>Raw Transactions]
-    S3Parquet[Amazon S3<br/>Curated Parquet Data]
-    S3Report[Amazon S3<br/>Final Report<br/>(Excel / CSV)]
+    S3Raw[Amazon S3 Raw Data]
+    S3Curated[Amazon S3 Curated Parquet]
+    S3Report[Amazon S3 Final Report]
 
-    %% Processing
-    GlueExtract[AWS Glue Job<br/>Extract Failed Transactions]
-    GlueTransform[AWS Glue Job<br/>Transform & Aggregate]
-    Athena[Amazon Athena<br/>Query Aggregated Data]
-    LambdaReport[AWS Lambda<br/>Generate Excel Report]
+    GlueExtract[AWS Glue Extract Job]
+    GlueTransform[AWS Glue Transform Job]
+    Athena[Amazon Athena Query]
+    LambdaReport[AWS Lambda Generate Report]
 
-    %% Failure & Observability
-    Retry[Retry x3<br/>Exponential Backoff]
-    DLQ[Amazon SQS<br/>Dead Letter Queue]
-    Notify[Amazon SNS / SES<br/>Notify Dev & BA]
-    Logs[Amazon CloudWatch<br/>Logs & Metrics]
+    Retry[Retry with Exponential Backoff]
+    DLQ[Amazon SQS Dead Letter Queue]
+    Notify[Amazon SNS or SES Email]
+    Logs[Amazon CloudWatch Logs]
 
-    %% Flow
     EB --> SF
-    SF -->|Start| GlueExtract
-    GlueExtract -->|Read| DDB
+    SF --> GlueExtract
+
+    GlueExtract --> DDB
     GlueExtract --> S3Raw
     GlueExtract --> GlueTransform
-    GlueTransform --> S3Parquet
+
+    GlueTransform --> S3Curated
     GlueTransform --> Athena
+
     Athena --> LambdaReport
     LambdaReport --> S3Report
     S3Report --> Notify
 
-    %% Failure paths
     SF --> Retry
     Retry --> GlueExtract
+
     GlueExtract -.Failure.-> DLQ
     GlueTransform -.Failure.-> DLQ
     LambdaReport -.Failure.-> DLQ
     DLQ --> Notify
 
-    %% Logging
     SF --> Logs
     GlueExtract --> Logs
     GlueTransform --> Logs
