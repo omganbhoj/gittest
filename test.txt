@@ -24,3 +24,115 @@ flowchart TD
     L2 -. error .-> DLQ
     L3 -. error .-> DLQ
     SF -. logs .-> CW
+
+==========================================================
+
+<mxfile host="app.diagrams.net">
+  <diagram name="AWS Serverless Transactions Reconciliation">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1600" pageHeight="900">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- EventBridge -->
+        <mxCell id="eventbridge" value="Amazon EventBridge&#10;Weekly Schedule"
+          style="shape=mxgraph.aws4.eventbridge;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="40" y="380" width="120" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Step Functions -->
+        <mxCell id="stepfunctions" value="AWS Step Functions&#10;Control Plane"
+          style="shape=mxgraph.aws4.step_functions;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="220" y="250" width="260" height="300" as="geometry"/>
+        </mxCell>
+
+        <!-- Lambda Fetch -->
+        <mxCell id="lambda_fetch" value="AWS Lambda&#10;Fetch Failed Transactions"
+          style="shape=mxgraph.aws4.lambda;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="260" y="280" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Lambda Transform -->
+        <mxCell id="lambda_transform" value="AWS Lambda&#10;Transform Data"
+          style="shape=mxgraph.aws4.lambda;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="260" y="360" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Lambda Excel -->
+        <mxCell id="lambda_excel" value="AWS Lambda&#10;Generate Excel Report"
+          style="shape=mxgraph.aws4.lambda;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="260" y="440" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Lambda Failure -->
+        <mxCell id="lambda_failure" value="AWS Lambda&#10;Failure Handler"
+          style="shape=mxgraph.aws4.lambda;fillColor=#FFCDD2;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="260" y="520" width="200" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- DynamoDB -->
+        <mxCell id="dynamodb" value="Amazon DynamoDB&#10;Transactions Table"
+          style="shape=mxgraph.aws4.dynamodb;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="540" y="260" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- S3 Raw -->
+        <mxCell id="s3_raw" value="Amazon S3&#10;Raw Data (JSON)"
+          style="shape=mxgraph.aws4.s3;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="540" y="350" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- S3 Transformed -->
+        <mxCell id="s3_transformed" value="Amazon S3&#10;Transformed Data"
+          style="shape=mxgraph.aws4.s3;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="540" y="440" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- S3 Final -->
+        <mxCell id="s3_final" value="Amazon S3&#10;Final Excel Report"
+          style="shape=mxgraph.aws4.s3;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="540" y="530" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- SNS -->
+        <mxCell id="sns" value="Amazon SNS / SES&#10;Email Dev &amp; BA"
+          style="shape=mxgraph.aws4.sns;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="780" y="480" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- SQS DLQ -->
+        <mxCell id="sqs" value="Amazon SQS&#10;DLQ"
+          style="shape=mxgraph.aws4.sqs;html=1;"
+          vertex="1" parent="1">
+          <mxGeometry x="780" y="580" width="180" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Connections -->
+        <mxCell id="e1" edge="1" parent="1" source="eventbridge" target="stepfunctions"/>
+        <mxCell id="e2" edge="1" parent="1" source="lambda_fetch" target="dynamodb"/>
+        <mxCell id="e3" edge="1" parent="1" source="lambda_fetch" target="s3_raw"/>
+        <mxCell id="e4" edge="1" parent="1" source="lambda_transform" target="s3_transformed"/>
+        <mxCell id="e5" edge="1" parent="1" source="lambda_excel" target="s3_final"/>
+        <mxCell id="e6" edge="1" parent="1" source="s3_final" target="sns"/>
+
+        <!-- Failure Paths -->
+        <mxCell id="e7" edge="1" parent="1" source="stepfunctions" target="lambda_failure"
+          style="dashed=1;strokeColor=#D32F2F"/>
+        <mxCell id="e8" edge="1" parent="1" source="lambda_failure" target="sqs"
+          style="dashed=1;strokeColor=#7B1FA2"/>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
