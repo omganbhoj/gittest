@@ -1,29 +1,55 @@
-flowchart TD
-    EB[EventBridge<br/>Weekly Schedule]
-    SF[Step Functions<br/>Orchestration]
-    L1[Lambda<br/>Fetch Failed Txns]
-    DDB[(DynamoDB)]
-    L2[Lambda<br/>Transform Data]
-    L3[Lambda<br/>Generate Excel]
-    S3[(S3<br/>Excel Reports)]
-    L4[Lambda<br/>Send Email]
-    SNS[SNS / SES]
-    DLQ[SQS DLQ]
-    CW[CloudWatch]
+flowchart LR
+    %% Triggers
+    EB[Amazon EventBridge<br/>Weekly Schedule]
+    SF[AWS Step Functions<br/>Orchestrator]
 
+    %% Source
+    DDB[Amazon DynamoDB<br/>Transactions Table]
+
+    %% Data Lake
+    S3Raw[Amazon S3<br/>Raw Transactions]
+    S3Parquet[Amazon S3<br/>Curated Parquet Data]
+    S3Report[Amazon S3<br/>Final Report<br/>(Excel / CSV)]
+
+    %% Processing
+    GlueExtract[AWS Glue Job<br/>Extract Failed Transactions]
+    GlueTransform[AWS Glue Job<br/>Transform & Aggregate]
+    Athena[Amazon Athena<br/>Query Aggregated Data]
+    LambdaReport[AWS Lambda<br/>Generate Excel Report]
+
+    %% Failure & Observability
+    Retry[Retry x3<br/>Exponential Backoff]
+    DLQ[Amazon SQS<br/>Dead Letter Queue]
+    Notify[Amazon SNS / SES<br/>Notify Dev & BA]
+    Logs[Amazon CloudWatch<br/>Logs & Metrics]
+
+    %% Flow
     EB --> SF
-    SF --> L1
-    L1 --> DDB
-    L1 --> L2
-    L2 --> L3
-    L3 --> S3
-    S3 --> L4
-    L4 --> SNS
+    SF -->|Start| GlueExtract
+    GlueExtract -->|Read| DDB
+    GlueExtract --> S3Raw
+    GlueExtract --> GlueTransform
+    GlueTransform --> S3Parquet
+    GlueTransform --> Athena
+    Athena --> LambdaReport
+    LambdaReport --> S3Report
+    S3Report --> Notify
 
-    L1 -. error .-> DLQ
-    L2 -. error .-> DLQ
-    L3 -. error .-> DLQ
-    SF -. logs .-> CW
+    %% Failure paths
+    SF --> Retry
+    Retry --> GlueExtract
+    GlueExtract -.Failure.-> DLQ
+    GlueTransform -.Failure.-> DLQ
+    LambdaReport -.Failure.-> DLQ
+    DLQ --> Notify
+
+    %% Logging
+    SF --> Logs
+    GlueExtract --> Logs
+    GlueTransform --> Logs
+    LambdaReport --> Logs
+    Athena --> Logs
+
 
 ==========================================================
 
